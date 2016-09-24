@@ -1,10 +1,13 @@
-To run the server enviornment variables are needed!
+To setup the dependencies required for accessBot, ensure you cd to ./Server/ and run the following script:
+sudo./setup.sh 
+
+To run the server, environment variables are needed!
 
 Here is a small shell script that sets up said variables
 
     #!/bin/bash
 
-    # scipt for starting our accessBot
+    # script for starting our accessBot
     clear
     PORT="3000"
     export PORT
@@ -12,7 +15,7 @@ Here is a small shell script that sets up said variables
     SESSION_SECRET="putyoursupperawesomesecretrighthere"
     export SESSION_SECRET
 
-    MONGODB_URI="mongodb://localhost.makerauth"
+    MONGODB_URI="mongodb://localhost/makerauth"
     export MONGODB_URI
     
     #password for root, make live one something better than this
