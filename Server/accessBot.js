@@ -224,7 +224,9 @@ var serve = {                                                // depends on cooki
         var router = serve.express.Router();                 // create express router object to add routing events to
         router.get('/', routes.login);                       // log in page
         router.post('/', routes.admin);                      // request registration page
-        router.get('/:machine/:card', routes.auth);          // authentication route
+        if(process.env.TESTING_MA){
+            router.get('/:machine/:card', routes.auth);      // authentication route
+        }
         app.use(router);                                     // get express to user the routes we set
         sockets.listen(http);                                // listen and handle socket connections
         http.listen(process.env.PORT);                       // listen on specified PORT enviornment variable

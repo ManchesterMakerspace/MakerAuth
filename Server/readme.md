@@ -19,13 +19,19 @@ Here is a small shell script that sets up said variables
     MASTER_PASS="monkey"
     export MASTER_PASS
 
-    echo "Starting the accessBot!"
-    # nodemon accessBot.js # reloads server on source change -> sudo npm install -g nodemon
-    node accessBot.js
-    
-    OUR_FRONT_DOOR="nameofthemaindoorlandlordwouldcomein"
-    export OUR_FRONT_DOOR
+    # State whether testing application or not
+    TESTING_MA=true
+    export TESTING_MA
 
+    echo "Starting the accessBot!"
+    if $TESTING_MA; then
+        nodemon accessBot.js
+        # reloads server on source change -> sudo npm install -g nodemon
+    else
+        pm2 start accessBot.js
+        # backgrounds process
+    fi
+    
 "nano start.sh" in Sever this folder, add above code with your own parameters, ctrl-x to save, and "chmod +x start.sh"
 
 To start the server run ./start.sh
