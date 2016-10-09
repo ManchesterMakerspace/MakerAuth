@@ -30,13 +30,24 @@ var slack = {
     webhook: require('@slack/client').IncomingWebhook,
     wh: null,
     init: function(){
-        slack.wh = new slack.webhook(process.env.SLACK_WEBHOOK_URL, {
-            username: 'doorboto',
-            channel: 'whos_at_the_space',
-            iconEmoji: ':robot_face:',
-            defaultText: 'domo arigato ka?'
-        });
-        slack.wh.send('doorboto started');
+        try {
+            slack.wh = new slack.webhook(process.env.SLACK_WEBHOOK_URL, {
+                username: 'doorboto',
+                channel: 'whos_at_the_space',
+                iconEmoji: ':robot_face:',
+                defaultText: 'domo arigato ka?'
+            });
+            slack.wh.send('doorboto started');
+        } catch (e){
+            console.log('no connection to slack:' + e);
+        }
+    },
+    send: function(msg){
+        try {
+            slack.wh.send(msg);
+        } catch (e){
+            console.log('slack: No Sendy:'+ msg + ' - Cause:'+ e);
+        }
     }
 };
 
@@ -164,11 +175,11 @@ var sockets = {                                                           // dep
             socket.on('auth', auth.orize(
                 function(member){
                     sockets.io.to(socket.id).emit('auth', 'a');
-                    slack.wh.send(member.fullname + ' just checked in');
+                    slack.send(member.fullname + ' just checked in');
                 },
                 function(msg){
                     sockets.io.to(socket.id).emit('auth', 'd');
-                    slack.wh.send('someone was denied access');
+                    slack.send('someone was denied access');
                 })); // credentials passed from socket AP
             socket.on('renew', search.renew);                             // renewal is passed from admin client
             socket.on('findGroup', search.group);                         // find to to register under a group
@@ -181,11 +192,11 @@ var routes = {                                                            // dep
         var authFunc = auth.orize(
             function(member){
                 res.status(200).send('a');
-                slack.wh.send(member.fullname + ' just checked in');
+                slack.send(member.fullname + ' just checked in');
             }, // create authorization function
             function(msg){
                 res.status(403).send(msg);
-                slack.wh.send('someone was denied access');
+                slack.send('someone was denied access');
             });
         authFunc(req.params);                                             // execute auth function against credentials
     },
@@ -224,7 +235,9 @@ var serve = {                                                // depends on cooki
         var router = serve.express.Router();                 // create express router object to add routing events to
         router.get('/', routes.login);                       // log in page
         router.post('/', routes.admin);                      // request registration page
-        router.get('/:machine/:card', routes.auth);          // authentication route
+        if(process.env.TESTING_MA){
+            router.get('/:machine/:card', routes.auth);      // authentication route
+        }
         app.use(router);                                     // get express to user the routes we set
         sockets.listen(http);                                // listen and handle socket connections
         http.listen(process.env.PORT);                       // listen on specified PORT enviornment variable
@@ -234,3 +247,4 @@ var serve = {                                                // depends on cooki
 mongo.init();    // conect to our mongo server
 slack.init();    // fire up slack intergration
 serve.theSite(); // Initiate site!
+
