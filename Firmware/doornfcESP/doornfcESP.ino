@@ -9,22 +9,27 @@
 #include <ESP8266WiFiMulti.h>
 #include <ESP8266HTTPClient.h>
 #include <Adafruit_NeoPixel.h>
+#include <ArduinoJson.h>
+#include "FS.h"
 
-#define RST_PIN                 5
-#define SS_PIN                  4
-#define RELAY_PIN               16
-#define PIXEL_PIN               0
+//pins left: D1,D9/rx, D10/tx
+#define RST_PIN                 D3
+#define SS_PIN                  D8
+#define RELAY_PIN               D2
+#define PIXEL_PIN               D4
 #define UNLOCK_TIME_SECONDS     6
-#define DEBUG_MODE
+#define DEBUG_MODE              1
 
 
 const char* AuthServer = "http://manchmakerspace.herokuapp.com";
 IPAddress dns(8, 8, 8, 8);
 const bool ImmaDoor = 1;
 const bool ImmaMachine = 0;
-const char* WifiName = "mywifi";
+const char* WifiName = "wifiname";
 const char* WifiPassword = "wifipassword";
-//String WifiName, WifiPassword;
+//char WifiName[33]; //maximum length of an SSID is 32 bytes. (plus null termination)
+//char WifiPassword[65]; //maximum length of a WPA2-PSK key is 64 bytes. (plus null termination)
+//String WifiNameString, WifiPassword;
 
 
 ESP8266WiFiMulti WiFiMulti; //Wifi handler object
@@ -52,22 +57,22 @@ void setup() {
   pinMode(RELAY_PIN, OUTPUT);
   //Set up serial connection to computer for debug.
   Serial.begin(115200);
-
-// TODO: make the board read wifi configuration from a file in the
-//       onboard flash file system instead of hardcoding it above.
-//       Will make for user-doable in-field config changes
-//          (via serial of course).
-//  //mount the SPIFFS file system
-//  if(SPIFFS.begin()){
-//    File f = SPIFFS.open("/wifi.txt", "r");
-//    if(!f) {
-//      Serial.println("File not found!");
-//    }
-//    //read line by line
-//    String WifiName = f.readStringUntil('\n');
-//    String WifiPassword = f.readStringUntil('\n');
-//    f.close();
-//  }
+  Serial.println("");
+/*
+  //Load configuration from onboard flash file.
+  if( SPIFFS.begin() ){
+    if ( loadConfig() ){
+      Serial.println("Config loaded");
+    }
+    else{
+      Serial.println("Failed to load config");
+    }
+  }
+  else{
+    Serial.println("Failed to mount file system");
+    return;
+  }*/
+  
   
   
 
@@ -297,8 +302,4 @@ void rainbowCycle(uint8_t wait) {
     delay(wait);
   }
 }
-
-
-
-
 
