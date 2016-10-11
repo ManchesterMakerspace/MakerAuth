@@ -76,8 +76,8 @@ var auth = {                                                                  //
                     if(member.status === 'Revoked'){
                         fail('Revoked');
                     } else if (member.groupName){                                         // if this member is part of a group membership
-                        mongo.member.findOne({groupName: member.groupName, groupKeystone: true}, auth.foundGroup(data, success, fail));
-                    } else { auth.checkExpiry(member, success, fail); }                   // given no group, no error, and good in standing
+                        mongo.member.findOne({groupName: member.groupName, groupKeystone: true}, auth.foundGroup(data, member.fullname, success, fail));
+                    } else { auth.checkExpiry(member, member.fullname, success, fail); }  // given no group, no error, and good in standing
                 } else {fail('not authorized');}                                          // else no machine match
             } else {
                 sockets.io.emit('regMember', {cardID: data.card, machine: data.machine}); // emit reg info to admin
@@ -85,17 +85,17 @@ var auth = {                                                                  //
             }
         };
     },
-    foundGroup: function(data, success, fail){                                 // callback for when a group is found in db
+    foundGroup: function(data, memberName, success, fail){                                // callback for when a group is found in db
         return function(error, group){
             if(error)      { fail('finding group admin:' + error); }
-            else if (group){ auth.checkExpiry(group, success, fail);}
+            else if (group){ auth.checkExpiry(group, memberName, success, fail);}
             else           { fail('no group admin');}
         };
     },
-    checkExpiry: function(member, success, fail){
+    checkExpiry: function(member, memberName, success, fail){
         if(new Date().getTime() > new Date(member.expirationTime).getTime()){ // if membership expired
             fail('expired');                                                  // TODO notify admin of expiration
-        } else { success(member); }                                           // otherwise, LET THEM IN!!!!
+        } else { success(memberName); }                                       // otherwise, LET THEM IN!!!!
     },
     checkAccess: function(machine, authorized){                               // takes current machine and array of authorized machines
         for(var i = 0; i < authorized.length; i++){                           // against all authorized machines
@@ -173,9 +173,9 @@ var sockets = {                                                           // dep
             socket.on('find', search.find);                               // event admin client looks to find a member
             socket.on('revokeAll', search.revokeAll);                     // admin client revokes member privilages
             socket.on('auth', auth.orize(
-                function(member){
+                function(memberName){
                     sockets.io.to(socket.id).emit('auth', 'a');
-                    slack.send(member.fullname + ' just checked in');
+                    slack.send(memberName + ' just checked in');
                 },
                 function(msg){
                     sockets.io.to(socket.id).emit('auth', 'd');
@@ -190,9 +190,9 @@ var sockets = {                                                           // dep
 var routes = {                                                            // depends on auth: handles routes
     auth: function(req, res){                                             // get route that acccess control machine pings
         var authFunc = auth.orize(
-            function(member){
+            function(memberName){
                 res.status(200).send('a');
-                slack.send(member.fullname + ' just checked in');
+                slack.send(memberName + ' just checked in');
             }, // create authorization function
             function(msg){
                 res.status(403).send(msg);
@@ -247,4 +247,3 @@ var serve = {                                                // depends on cooki
 mongo.init();    // conect to our mongo server
 slack.init();    // fire up slack intergration
 serve.theSite(); // Initiate site!
-
