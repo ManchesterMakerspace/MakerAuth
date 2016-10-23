@@ -22,6 +22,14 @@ Here is a small shell script that sets up said variables
     MASTER_PASS="monkey"
     export MASTER_PASS
 
+    # URL for slack webhook intergration (basically auth you need to be a bot)
+    SLACK_WEBHOOK_URL="www.putTheWebHookURLHere.com"
+    export SLACK_WEBHOOK_URL
+
+    # individual token for slack (in this case we need to act as an adminstrator to invite new members)
+    SLACK_TOKEN="putYourTokenHere"
+    export SLACK_TOKEN
+
     # State whether testing application or not
     TESTING_MA=true
     export TESTING_MA
@@ -31,6 +39,8 @@ Here is a small shell script that sets up said variables
         nodemon accessBot.js
         # reloads server on source change -> sudo npm install -g nodemon
     else
+        npm install
+        # probably want to make sure npm install is run when upgrading dorboto
         pm2 start accessBot.js
         # backgrounds process
     fi

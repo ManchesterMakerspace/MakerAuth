@@ -7,6 +7,7 @@ var display = {
         $('#groupSize').val('');
         $('#months').val('');
         $('#startDate').val('');
+        $('#email').val('');
     },
     canRegister: function(youCan){
         if(youCan){
@@ -69,11 +70,11 @@ var register = {
         else { $('#msg').text('need more info'); }
     },
     withConditions: function(member, startDate, months ){ // returns validation requirements per type of member
-        if      (member.status === 'Individual') { return (startDate || (months > 0 && months < 14)) && member.fullname; }
+        if      (member.status === 'Individual') { return (startDate || (months > 0 && months < 14)) && member.fullname && member.email; }
         else if (member.status === 'Group') {
             if (member.groupKeystone) {
-                return (startDate || (months > 0 && months < 14)) && member.fullname && member.groupName && member.groupSize;
-            } else { return member.fullname && member.groupName;}
+                return (startDate || (months > 0 && months < 14)) && member.fullname && member.groupName && member.groupSize && member.email;
+            } else { return member.fullname && member.groupName && member.email;}
         }
         else if (member.status === 'Admin')      { return member.fullname && member.password; }
         else if (member.status === 'Contractor') { return startDate && member.fullname; }
@@ -91,6 +92,7 @@ var register = {
             groupKeystone: false,                          // whether group keystone or not, if applicable
             groupSize: $('#groupSize').val(),              // group size note for potential limits
             password: $('#password').val(),                // passwords for admin access of employees or board members
+            email: $('#email').val(),                      // email to auto invite on slack
         };
         if(member.groupSize){ member.groupKeystone = true;}            // group size is only shown to keystone members of groups
         if(register.withConditions(member, startDate, months)){        // get proper validation for this user type
