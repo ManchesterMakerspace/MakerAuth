@@ -31,6 +31,8 @@ Here is a small shell script that sets up said variables
         nodemon accessBot.js
         # reloads server on source change -> sudo npm install -g nodemon
     else
+        npm install
+        # probably want to make sure npm install is run when upgrading dorboto
         pm2 start accessBot.js
         # backgrounds process
     fi

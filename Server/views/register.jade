@@ -47,6 +47,9 @@ block content
                 .form-group.regEntries#startEntry
                     label(for="startDate") Start Time (leave blank for current date)
                     input#startDate.form-control(type="date", min="2016-05-17", name="startDate")
+                .form-group.regEntries#enterEmail
+                    lable(for="email") Email (slack invite)
+                    input#email.form-control(type="email")
                 button.submit#regBtn.btn.btn-success.btn-lg Register
                 button.reject.btn.btn-success.btn-lg.pull-right Cancel
         #registerBot.jumbotron.view
