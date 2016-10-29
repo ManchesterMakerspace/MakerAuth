@@ -2,6 +2,10 @@
 # this script will need to be run as sudo
 
 curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
+
+echo "bringing package list up to date"
+apt-get update
+
 echo "Installing NodeJS"
 apt-get install -y nodejs
 
