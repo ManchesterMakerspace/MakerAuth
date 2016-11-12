@@ -8,15 +8,15 @@ var socket = {
     io: require('socket.io-client')(process.env.SERVER),
     init: function(){ // notify authorization or denial: make sure arduino has start and end chars to read
         socket.io.on('auth', function(data){ arduino.connection.write("<" + data + ">"); });
-    }  
-}
+    }
+};
 
 var arduino = {
     serialLib: require('serialport'),
     serialInstance: null,
     connection: null,
     init: function(){
-        arduino.serialInstance = arduino.serialLib.SerialPort
+        arduino.serialInstance = arduino.serialLib.SerialPort;
         arduino.connection = new arduino.serialInstance(process.env.SERIALPORT, {
             baudrate: 9600,
             parser: arduino.serialLib.parsers.readline('\n')
@@ -37,8 +37,7 @@ var arduino = {
     error: function(error){                    // given something went wrong try to re-establish connection
         setTimeout(arduino.init, RETRY_DELAY); // retry every half a minute
     },
-}
+};
 
 socket.init();
 arduino.init();
-

@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mattminuti/MakerAuth.git"
+    "url": "git+https://github.com/MancehsterMakerspace/MakerAuth.git"
   },
   "author": "Manchester Makerspace",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/mattminuti/MakerAuth/issues"
+    "url": "https://github.com/ManchesterMakerspace/MakerAuth/issues"
   },
-  "homepage": "https://github.com/mattminuti/MakerAuth#readme",
+  "homepage": "https://github.com/ManchesterMakerspace/MakerAuth#readme",
   "private": true,
   "dependencies": {
     "@slack/client": "^3.6.0",
@@ -28,7 +28,8 @@
     "jade": "^1.11.0",
     "mongoose": "^4.4.19",
     "request": "^2.75.0",
-    "socket.io": "^1.4.6"
+    "socket.io": "^1.4.6",
+    "socket.io-client": "^1.5.1"
   },
   "engines": {
     "node": "4.2.4",
