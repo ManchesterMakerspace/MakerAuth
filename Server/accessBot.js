@@ -1,4 +1,5 @@
 // accessBot.js ~ Copyright 2016 Manchester Makerspace ~ License MIT
+var slack = require('./doorboto_modules/slack_intergration.js');                      // get slack send and invite methodes
 
 var mongo = { // depends on: mongoose
     ose: require('mongoose'),
@@ -25,53 +26,6 @@ var mongo = { // depends on: mongoose
             type: {type: String, required: '{PATH} is required'},                     // type (door, tool, kegerator, ect)
         }));
     }
-};
-
-var slack = {
-    webhook: require('@slack/client').IncomingWebhook, // url to slack intergration called "webhook" can post to any channel as a "bot"
-    request: require('request'),                       // needed to make post request to slack api
-    token: process.env.SLACK_TOKEN,                    // authentication to post as and invidual (in this case an admin user is needed to inivite new members)
-    wh: null,                                          // webhook connection object if successfully connected
-    init: function(){                                  // runs only once on server start up (may be we should timeout retrys)
-        try {                                          // slack is not a dependancy, will fail softly if no internet or slack
-            slack.wh = new slack.webhook(process.env.SLACK_WEBHOOK_URL, { // instantiate webhook (bot) w/ its url and profile
-                username: 'doorboto',                  // Name of bot
-                channel: 'whos_at_the_space',          // channel that this intergration spams in particular
-                iconEmoji: ':robot_face:',             // icon emoji that bot uses for a profile picture
-                defaultText: 'domo arigato ka?'        // message that gets sent when no value is passed to send
-            });
-            slack.wh.send('doorboto started');         // Notes that server just started or restarted
-        } catch(e){console.log('no connection to slack:' + e);} // handle not being connected
-    },
-    send: function(msg){
-        try      {slack.wh.send(msg);}                                    // try to send
-        catch (e){console.log('slack: No Sendy:'+ msg + ' - Cause:'+ e);} // fail softly if slack or internet is down
-    },
-    invite: function(email, newMember){
-        try { // there are no errors only unexpected results
-            var channels = '&channels=C050A22AL,C050A22B2,G2ADCCBAP,C0GB99JUF,C29L2UMDF,C0MHNCXGV,C1M5NRPB5,C14TZJQSY,C1M6THS3E,C1QCBJ5D3';
-            // Channels - general, random, who_at_the_space , 36_old_granite, talk_to_the_board, automotive, electronics, rapid p, wood, metal
-            var emailReq = '&email=' + email;               // NOTE: has to be a valid email, no + this or that
-            var inviteAddress = 'https://slack.com/api/users.admin.invite?token=' + slack.token + emailReq + channels;
-            console.log(inviteAddress);
-            slack.request.post(inviteAddress, function(error, response, body){
-                var msg = 'NOT MADE';                       // default to returning a possible error message
-                if(error){slack.failedInvite(error);}       // post request error
-                else if (response.statusCode == 200){       // give a good status code
-                    body = JSON.parse(body);
-                    if(body.ok){                            // check if reponse body ok
-                        msg = 'invite pending';             // if true, success!
-                    } else {                                // otherwise
-                        if(body.error){slack.failedInvite('error ' + body.error);} // log body error
-                    }
-                } else {                                    // maybe expecting possible 404 not found or 504 timeout
-                    slack.failedInvite('other status ' + response.statusCode);   // log different status code
-                }
-                slack.send(newMember + ' just signed up! Slack invite: ' + msg); // regardless post registration event to whosAtTheSpace
-            });
-        } catch (e){slack.failedInvite(e);}                                      // fail softly in case there is no connection to outside
-    },
-    failedInvite: function(error){console.log('slack: invite failed:' + error);} // common fail message
 };
 
 var auth = {                                                                  // depends on mongo and sockets: authorization events
@@ -196,9 +150,22 @@ var register = {
                 slack.invite(registration.email, registration.fullname); // invite newly registered member to slack
                 sockets.io.emit('message', 'save success');              // show save happened to web app
             }
-        }
+        };
     }
 };
+
+/* Prototype IPN listener connection
+var ioClient = {
+    socket: require('socket.io-client')(process.env.PAYMENT_NOTIFICATION_SERVER),
+    init: function(){ // notify authorization or denial: make sure arduino has start and end chars to read
+        // probably put something here to authenticate with server that this is real doorboto
+        ioClient.socket.emit('authenticate', process.env.DOORBOTO_TOKEN); // authenticate w/relay server
+        //  ioClient.socket.on('paymentMade', ioClient.paymentMade);
+    },
+    paymentMade: function(data){
+        // add made payment to data base to either renew or add a pending card holder
+    }
+}; */
 
 var sockets = {                                                           // depends on register, search, auth: handle socket events
     io: require('socket.io'),
@@ -281,6 +248,6 @@ var serve = {                                                // depends on cooki
     }
 };
 
-mongo.init();    // conect to our mongo server
-slack.init();    // fire up slack intergration
-serve.theSite(); // Initiate site!
+mongo.init();                                                // conect to our mongo server
+slack.init('whos_at_the_space', 'Doorboto started');         // fire up slack intergration, for x channel
+serve.theSite();                                             // Initiate site!
