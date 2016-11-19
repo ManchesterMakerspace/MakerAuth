@@ -36,42 +36,42 @@ var auth = {                                                                  //
     },
     foundBot: function(data, success, fail){                                  // callback for when a bot is found in db
         return function(error, bot){                                          // return a pointer to this function to keep params in closure
-            if(error){fail('finding bot:' + error);}
+            if(error){fail('Card reader:' + error);}
             else if(bot){ mongo.member.findOne({cardID: data.card}, auth.foundMember(data, success, fail));}
             else {
                 sockets.io.emit('regBot', data.machine);                      // signal an interface prompt for registering bots
-                fail('not a bot');
+                fail('New card reader?');
             }
         };
     },
     foundMember: function(data, success, fail){                                           // callback for when a member is found in db
         return function(error, member){
-            if(error){fail('finding member:' + error);}
+            if(error){fail('finding member issue:' + error);}
             else if (member){
                 sockets.io.emit('memberScan', member);                                    // member scan.. just like going to the airport
                 if (auth.checkAccess(data.machine, member.accesspoints)){
                     if(member.status === 'Revoked'){
-                        fail('Revoked');
+                        fail(member.fullname + ', talk to board ');                       // PC message for Revoked members
                     } else if (member.groupName){                                         // if this member is part of a group membership
                         mongo.member.findOne({groupName: member.groupName, groupKeystone: true}, auth.foundGroup(data, member.fullname, success, fail));
                     } else { auth.checkExpiry(member, member.fullname, success, fail); }  // given no group, no error, and good in standing
-                } else {fail('not authorized');}                                          // else no machine match
+                } else {fail( member.fullname + 'not authorized on ' + data.machine);}    // else no machine match
             } else {
                 sockets.io.emit('regMember', {cardID: data.card, machine: data.machine}); // emit reg info to admin
-                fail('not a member');                                                     // given them proper credentials to put in db
+                fail('unregistered member');                                              // given them proper credentials to put in db
             }
         };
     },
     foundGroup: function(data, memberName, success, fail){                                // callback for when a group is found in db
         return function(error, group){
-            if(error)      { fail('finding group admin:' + error); }
-            else if (group){ auth.checkExpiry(group, memberName, success, fail);}
-            else           { fail('no group admin');}
+            if(error)      {fail( memberName + ' finding group admin:' + error);} // very improbable
+            else if (group){auth.checkExpiry(group, memberName, success, fail);}  // check keystone members expiration date
+            else           {fail( memberName + ' no group admin');}               // this should never occur
         };
     },
     checkExpiry: function(member, memberName, success, fail){
         if(new Date().getTime() > new Date(member.expirationTime).getTime()){ // if membership expired
-            fail('expired');                                                  // TODO notify admin of expiration
+            fail(member.fullname + "'s membership expired");                  // Notify expiration
         } else { success(memberName); }                                       // otherwise, LET THEM IN!!!!
     },
     checkAccess: function(machine, authorized){                               // takes current machine and array of authorized machines
@@ -183,7 +183,7 @@ var sockets = {                                                           // dep
                 },
                 function(msg){
                     sockets.io.to(socket.id).emit('auth', 'd');
-                    slack.send('someone was denied access');
+                    slack.send(msg + ': denied access');
                 })); // credentials passed from socket AP
             socket.on('renew', search.renew);                             // renewal is passed from admin client
             socket.on('findGroup', search.group);                         // find to to register under a group
@@ -199,8 +199,8 @@ var routes = {                                                            // dep
                 slack.send(memberName + ' just checked in');
             }, // create authorization function
             function(msg){
-                res.status(403).send(msg);
-                slack.send('someone was denied access');
+                res.status(403).send(msg + ": denied access");
+                slack.send(msg + ': denied access');
             });
         authFunc(req.params);                                             // execute auth function against credentials
     },
@@ -249,5 +249,5 @@ var serve = {                                                // depends on cooki
 };
 
 mongo.init();                                                // conect to our mongo server
-slack.init('whos_at_the_space', 'Doorboto started');         // fire up slack intergration, for x channel
+slack.init('test_channel', 'Doorboto started');              // fire up slack intergration, for x channel
 serve.theSite();                                             // Initiate site!
