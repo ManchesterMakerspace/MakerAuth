@@ -55,7 +55,7 @@ var auth = {                                                                  //
                     } else if (member.groupName){                                         // if this member is part of a group membership
                         mongo.member.findOne({groupName: member.groupName, groupKeystone: true}, auth.foundGroup(data, member.fullname, success, fail));
                     } else { auth.checkExpiry(member, member.fullname, success, fail); }  // given no group, no error, and good in standing
-                } else {fail( member.fullname + 'not authorized on ' + data.machine);}    // else no machine match
+                } else {fail( member.fullname + ' not authorized on ' + data.machine);}   // else no machine match
             } else {
                 sockets.io.emit('regMember', {cardID: data.card, machine: data.machine}); // emit reg info to admin
                 fail('unregistered member');                                              // given them proper credentials to put in db
