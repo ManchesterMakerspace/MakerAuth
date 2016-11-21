@@ -154,8 +154,8 @@ var register = {
     }
 };
 
-/* Prototype IPN listener connection
-var ioClient = {
+
+/* var ioClient = { // Prototype IPN listener connection
     socket: require('socket.io-client')(process.env.PAYMENT_NOTIFICATION_SERVER),
     init: function(){ // notify authorization or denial: make sure arduino has start and end chars to read
         // probably put something here to authenticate with server that this is real doorboto
@@ -248,6 +248,6 @@ var serve = {                                                // depends on cooki
     }
 };
 
-mongo.init();                                                // conect to our mongo server
-slack.init('test_channel', 'Doorboto started');              // fire up slack intergration, for x channel
-serve.theSite();                                             // Initiate site!
+mongo.init();                                                 // conect to our mongo server
+slack.init(process.env.BROADCAST_CHANNEL, 'Doorboto started');// fire up slack intergration, for x channel
+serve.theSite();                                              // Initiate site!
