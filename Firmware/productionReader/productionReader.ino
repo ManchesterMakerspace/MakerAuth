@@ -4,7 +4,7 @@
 #include <SPI.h>      // local arduino library
 #include <MFRC522.h>  // https://github.com/miguelbalboa/rfid
 
-#define OPEN_TIME 5000
+#define OPEN_TIME 3000
 #define RELAY     3
 #define RED_LED   7
 #define GREEN_LED 6
@@ -110,4 +110,3 @@ char* recieve(){
   }
   return 0; // in the case the message has yet to be recieved
 }
-
