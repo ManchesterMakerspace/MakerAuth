@@ -13,9 +13,6 @@ members = db['members']
 #Run queries on the 'members' collection, and format the results.
 #find() returns a Cursor instance, which allows us to iterate over all matching documents.
 #Find all group members.
-for member in members.find({"groupName":"Autodesk"}):
+members.count({"groupName":{"$exists":True , "$ne":""}})
+for member in members.find({"groupName":{"$exists":True , "$ne":""}}):
 	pprint.pprint(member)
-
-#pprint.pprint(collection.find_one({'fullname':'Daniel Perrinez'}))
-#result = collection.find_one({"groupName":"Autodesk"})
-
