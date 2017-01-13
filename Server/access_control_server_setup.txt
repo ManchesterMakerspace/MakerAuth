@@ -1,0 +1,36 @@
+Using RaspberryPi 2
+------------------------
+OS version: 2016-11-25-raspbian-jessie-lite -- (Linux 4.4.34-v7+ #930 SMP)
+default un:pw == pi:raspberry
+1. Add new user.
+Type the following:
+	sudo useradd putter
+	sudo passwd putter
+	1bluebikeshed
+Update keyboard settings:
+	sudo dpkg-reconfigure keyboard-configuration
+Add user to sudoers.
+	sudo add putter sudo
+	sudo mkdir /home/putter
+	sudo chown -R putter putter/
+Change user:
+	whoami
+	su - putter
+	whoami
+
+
+2. Install and update software:
+Type the following:
+	sudo apt-get update
+	sudo apt-get install git
+	sudo apt-get install python-pip
+	sudo apt-get install build-essential python-dev
+Clone RSServer:
+	git clone https://github.com/ManchesterMakerspace/RSServer.git /home/putter/RSServer
+
+3. Load database from .md file
+If .bson file is on a USB stick:
+	tail -f /var/log/messages (then insert the thumb drive and see if sbd1, ect.. shows up.)
+	sudo mkdir /media/usbstick usbstick can be whatever you want to call it
+	sudo mount -t vfat -o uid=pi,gid=pi /dev/sda1 /media/usbstick/
+	mongorestore --db makerauth /media/usbstick/makerauth.bson
