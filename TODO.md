@@ -1,4 +1,86 @@
-### Todo list
+#Top Priority Tasks:
+
+#Access Control 1.0 Release Features:
+- [ ] Full documentation on how to setup a development environment.
+- [ ] Ability to manage member access by cumulative period purchased (1 month + 3 months + 1 month, ect.). Note month should be defined as 30 days.
+	- [ ] Is a member signed up yet? Do we need a que.
+	- [ ] When does the clock start for them?
+- [ ] Ability to manage member(s) access by 'group' policy.
+- [ ] Ability automatically renew member access via paypal subscription.
+- [ ] Ability to collect and create member data from an electronic form filled out by members.
+
+
+
+###1) Clean up member records
+-------------------------------------------
+- [ ] Paul Beaudet" }	 - Member
+- [ ] PaulBeaudet" }	 - ?
+- [ ] Matt Minuti" }	 - Board
+- [ ] Mathew Minuti 1" }	 - ?
+- [ ] Claude Dupus" }	 - GSWT - change name to Dupuis
+```
+db.members.update({"fullname":"Claude Dupus"},{$set:{"fullname":"Claude Dupuis"}})
+```
+- [ ] Daniel berube" }	 - ?
+- [ ] Daniel Berube" }	 - Board
+- [ ] Patrick O'Brien		 - Autodesk - change name to Jennifer
+```
+db.members.update({"fullname":"Patrick O'Brien"},{$set:{"fullname":"Jennifer O'Brien"}})
+```
+
+###2) Create the GSWT group for:
+-------------------------------------------
+- [ ] Philip Boileau GSWT
+```
+db.members.update({"fullname":"Philip Boileau"},{$set:{"groupName":"GSWT"}})
+```
+- [ ] Woody Magnuson GSWT
+```
+db.members.update({"fullname":"Woody Magnuson"},{$set:{"groupName":"GSWT"}})
+```
+- [ ] Claude Dupuis GSWT
+```
+db.members.update({"fullname":"Claude Dupuis"},{$set:{"groupName":"GSWT"}})
+```
+- [ ] Ron Marcoux GSWT
+```
+db.members.update({"fullname":"Ron Marcoux"},{$set:{"groupName":"GSWT"}})
+```
+###3) Group members will all be updated with the same expiration time:
+-------------------------------------------
+- [ ] Autodesk (EPOCH 1497992361 == June. 20th 2017)
+```
+db.members.updateMany({"groupName":"Autodesk"},{$set:{"expirationTime":"1497992361"}},{multi:true})
+```
+- [ ] GSWT (EPOCH 1509656361 == Nov. 2nd 2017)
+```
+db.members.updateMany({"groupName":"GSWT"},{$set:{"expirationTime":"1509656361"}},{multi:true})
+```
+###4) Add new data rows to members document.
+-------------------------------------------
+- [ ] membershipsubscription : 1/0
+- [ ] contractonfile : 1/0 (should be a different collection?)
+
+###5) If member has a membershipsubscription value of 1 they are enabled for auto-renewal.
+-------------------------------------------
+
+------------------------------------------------------------------------------------------------------------
+
+#Access Control 2.0 Release Features:
+- Access tokens have a written value instead of default number.
+- Add CI/CD for access control system.
+- Machine access i.e. lathe, band saw, ect.
+
+------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+### Todo backlog list
 
 Save anything thing labled (optimization) for after MVP ~ minimal viable product
 
