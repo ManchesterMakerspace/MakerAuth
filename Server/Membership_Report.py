@@ -17,7 +17,9 @@ def unix_time_millis(dt):
 #===============================   MAIN   ====================================
 
 #Specify the connection to the mongo database:
-client = MongoClient('mongodb://localhost:27017')
+#client = MongoClient('mongodb://localhost:27017')
+client = MongoClient('mongodb://192.168.1.3:27017')
+
 db = client['makerauth']
 members = db['members']
 
