@@ -11,55 +11,11 @@
 
 
 
-###1) Clean up member records
--------------------------------------------
-- [ ] Paul Beaudet" }	 - Member
-- [ ] PaulBeaudet" }	 - ?
-- [ ] Matt Minuti" }	 - Board
-- [ ] Mathew Minuti 1" }	 - ?
-- [ ] Claude Dupus" }	 - GSWT - change name to Dupuis
-```
-db.members.update({"fullname":"Claude Dupus"},{$set:{"fullname":"Claude Dupuis"}})
-```
-- [ ] Daniel berube" }	 - ?
-- [ ] Daniel Berube" }	 - Board
-- [ ] Patrick O'Brien		 - Autodesk - change name to Jennifer
-```
-db.members.update({"fullname":"Patrick O'Brien"},{$set:{"fullname":"Jennifer O'Brien"}})
-```
 
-###2) Create the GSWT group for:
--------------------------------------------
-- [ ] Philip Boileau GSWT
-```
-db.members.update({"fullname":"Philip Boileau"},{$set:{"groupName":"GSWT"}})
-```
-- [ ] Woody Magnuson GSWT
-```
-db.members.update({"fullname":"Woody Magnuson"},{$set:{"groupName":"GSWT"}})
-```
-- [ ] Claude Dupuis GSWT
-```
-db.members.update({"fullname":"Claude Dupuis"},{$set:{"groupName":"GSWT"}})
-```
-- [ ] Ron Marcoux GSWT
-```
-db.members.update({"fullname":"Ron Marcoux"},{$set:{"groupName":"GSWT"}})
-```
-###3) Group members will all be updated with the same expiration time:
--------------------------------------------
-- [ ] Autodesk (EPOCH 1497992361 == June. 20th 2017)
-```
-db.members.updateMany({"groupName":"Autodesk"},{$set:{"expirationTime":"1497992361"}},{multi:true})
-```
-- [ ] GSWT (EPOCH 1509656361 == Nov. 2nd 2017)
-```
-db.members.updateMany({"groupName":"GSWT"},{$set:{"expirationTime":"1509656361"}},{multi:true})
 ```
 ###4) Add new data rows to members document.
 -------------------------------------------
 - [ ] membershipsubscription : 1/0
-- [ ] contractonfile : 1/0 (should be a different collection?)
 
 ###5) If member has a membershipsubscription value of 1 they are enabled for auto-renewal.
 -------------------------------------------
