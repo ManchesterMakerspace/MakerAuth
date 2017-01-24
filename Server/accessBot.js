@@ -1,36 +1,10 @@
 // accessBot.js ~ Copyright 2016 Manchester Makerspace ~ License MIT
-var slack = require('./doorboto_modules/slack_intergration.js');                      // get slack send and invite methodes
-
-var mongo = { // depends on: mongoose
-    ose: require('mongoose'),
-    init: function(){
-        mongo.ose.connect(process.env.MONGODB_URI);                                   // connect to our database
-        var Schema = mongo.ose.Schema; var ObjectId = Schema.ObjectId;
-        mongo.member = mongo.ose.model('member', new Schema({                         // create user object property
-            id: ObjectId,                                                             // unique id of document
-            fullname: { type: String, required: '{PATH} is required', unique: true }, // full name of user
-            cardID: { type: String, required: '{PATH} is required', unique: true },   // user card id
-            status: {type: String, Required: '{PATH} is required'},                   // type of account, admin, mod, ect
-            accesspoints: [String],                                                   // points of access member (door, machine, ect)
-            expirationTime: {type: Number},                                           // pre-calculated time of expiration
-            groupName: {type: String},                                                // potentially member is in a group/partner membership
-            groupKeystone: {type: Boolean},                                           // notes who holds expiration date for group
-            groupSize: {type: Number},                                                // notes how many members in group given in one
-            password: {type: String},                                                 // for admin cards only
-            email: {type: String},                                                    // store email of member for prosterity sake
-        }));
-        mongo.bot = mongo.ose.model('bot', new Schema({
-            id: ObjectId,
-            machineID: {type: String, required: '{PATH} is required', unique: true},  // unique identifier of point of access
-            botName: {type: String, required: '{PATH} is required', unique: true},    // human given name for point of access
-            type: {type: String, required: '{PATH} is required'},                     // type (door, tool, kegerator, ect)
-        }));
-    }
-};
+var slack = require('./doorboto_modules/slack_intergration.js');              // get slack send and invite methodes
+var mongo = require('./doorboto_modules/mongo.js');                           // grab mongoose schema and connect methods
 
 var auth = {                                                                  // depends on mongo and sockets: authorization events
     orize: function(success, fail){                                           // takes functions for success and fail cases
-        return function(data){                                                // return pointer to funtion that recieves credentials
+        return function(data){                                                // return pointer to event handler that recieves credentials
             mongo.bot.findOne({machineID: data.machine}, auth.foundBot(data, success, fail));
         };                                                                    // first find out which bot we are dealing with
     },
@@ -82,6 +56,19 @@ var auth = {                                                                  //
     }
 };
 
+
+var update = {                // requires mongo and sockets
+    renew: function(member){
+        mongo.member.findOne({fullname: member.fullname}, function(error, existingMember){
+            if(error){sockets.io.emit('message', 'renew issue: ' + error);}       // case of db error, report failure to admin
+            else if (existingMember){                                             // case things are going right
+                existingMember.expirationTime = member.expirationTime;            // set new expiration time
+                existingMember.save(search.updateCallback('renewed membership')); // save and on save note success to admin
+            } else { sockets.io.emit('message', 'Inconcievable!');}               // I don't think that word means what you think it means
+        });
+    },
+};
+
 var search = {                 // depends on mongo and sockets
     findAny: function(query){  // not functional yet this will be for listing members
         var cursor = mongo.member.find(query).cursor();
@@ -109,15 +96,6 @@ var search = {                 // depends on mongo and sockets
             } else { sockets.io.emit('message', 'Inconcievable!');}       // you keep using that word...
         });
     },
-    renew: function(update){
-        mongo.member.findOne({fullname: update.fullname}, function(err, member){
-            if(err){sockets.io.emit('message', 'renew issue: ' + err);}   // case of db error, report failure to admin
-            else if (member){                                             // case things are going right
-                member.expirationTime = update.expirationTime;            // set new expiration time
-                member.save(search.updateCallback('renewed membership')); // save and on save note success to admin
-            } else { sockets.io.emit('message', 'Inconcievable!');}       // I don't think that word means what you think it means
-        });
-    },
     updateCallback: function(msg){ // returns a custom callback for save events
         return function(err){
             if(err){ sockets.io.emit('message', 'update issue:' + err); }
@@ -134,24 +112,30 @@ var search = {                 // depends on mongo and sockets
     }
 };
 
-var register = {
+var register = {                                                 // requires mongo, sockets
     member: function(registration){                              // registration event
         var member = new mongo.member(registration);             // create member from registration object
-        member.save(register.response(registration));            // save method of member scheme: write to mongo!
+        member.save(                                             // yes this is a function that takes a function that takes a function
+            register.response(function(){slack.invite(registration.email, registration.fullname);})
+        );                                                       // save method of member scheme: write to mongo!
+    },
+    newPayment: function(newPayment){                            // conform to schema at payment listener
+        var payment = new mongo.payment(newPayment);             // model out a new doc to write to mongo
+        payment.save(register.reponse);                          // get a function that handles a generic error and succes case
     },
     bot: function(robot){
         var bot = new mongo.bot(robot);                          // create a new bot w/info recieved from client/admin
         bot.save(register.response);                             // save method of bot scheme: write to mongo!
     },
-    response: function(registration){
+    response: function(succesFunction){
         return function(error){                                          // callback for member save
             if(error){ sockets.io.emit('message', 'error:' + error); }   // given a write error
             else {
-                slack.invite(registration.email, registration.fullname); // invite newly registered member to slack
+                if(succesFunction){succesFunction();}                    // given a succes case run it
                 sockets.io.emit('message', 'save success');              // show save happened to web app
             }
         };
-    }
+    },
 };
 
 
@@ -167,49 +151,50 @@ var register = {
     }
 }; */
 
-var sockets = {                                                           // depends on register, search, auth: handle socket events
+var sockets = {                                                           // depends on slack, register, search, auth: handle socket events
     io: require('socket.io'),
     listen: function(server){
         sockets.io = sockets.io(server);
-        sockets.io.on('connection', function(socket){
+        sockets.io.on('connection', function(socket){                     // when any socket connects to us
             socket.on('newMember', register.member);                      // in event of new registration
             socket.on('newBot', register.bot);                            // event new bot is registered
             socket.on('find', search.find);                               // event admin client looks to find a member
             socket.on('revokeAll', search.revokeAll);                     // admin client revokes member privilages
-            socket.on('auth', auth.orize(
-                function(memberName){
-                    sockets.io.to(socket.id).emit('auth', 'a');
-                    slack.send(memberName + ' just checked in');
-                },
-                function(msg){
-                    sockets.io.to(socket.id).emit('auth', 'd');
-                    slack.send(msg + ': denied access');
-                })); // credentials passed from socket AP
-            socket.on('renew', search.renew);                             // renewal is passed from admin client
+            // bots should probably have to give us a shared key for next event handler to work
+            socket.on('auth', auth.orize(sockets.grantAccess, sockets.denyAccess));
+                              // get auth event handler by passing success & fail callbacks
+            socket.on('renew', update.renew);                             // renewal is passed from admin client
             socket.on('findGroup', search.group);                         // find to to register under a group
         });
+    },
+    grantAccess: function(memberName){                                    // is called on successful authorization
+        sockets.io.to(socket.id).emit('auth', 'a');
+        slack.send(memberName + ' just checked in');
+    },
+    denyAccess: function(msg){                                            // is called on failed authorization
+        sockets.io.to(socket.id).emit('auth', 'd');
+        slack.send(msg + ': denied access');
     }
 };
 
 var routes = {                                                            // depends on auth: handles routes
     auth: function(req, res){                                             // get route that acccess control machine pings
-        var authFunc = auth.orize(
-            function(memberName){
-                res.status(200).send('a');
-                slack.send(memberName + ' just checked in');
-            }, // create authorization function
-            function(msg){
-                res.status(403).send(msg + ": denied access");
-                slack.send(msg + ': denied access');
-            });
-        authFunc(req.params);                                             // execute auth function against credentials
+        auth.orize(routes.grantAccess, routes.denyAccess)(req.params);    // create auth event handler & execute it against credentials
     },
     admin: function(req, res){                                            // post by potential admin request to sign into system
         if(req.body.fullname === 'admin' && req.body.password === process.env.MASTER_PASS){
             res.render('register', {csrfToken: req.csrfToken()});
-        } else { res.send('denied'); }                                    // YOU SHALL NOT PASS
+        } else {res.send('denied');}                                      // YOU SHALL NOT PASS.. maybe a redirect(/) would be more helpful
     },
-    login: function(req, res){ res.render('signin', {csrfToken: req.csrfToken()}); } // get request to sign into system
+    login: function(req, res){res.render('signin', {csrfToken: req.csrfToken()});}, // get request to sign into system
+    grantAccess: function success(memberName){                            // route callback for granting access
+        res.status(200).send('a');
+        slack.send(memberName + ' just checked in');
+    },
+    denyAccess: function (msg){                                           // route callback for denying access
+        res.status(403).send(msg + ": denied access");
+        slack.send(msg + ': denied access');
+    }
 };
 
 var cookie = {                                               // Admin authentication / depends on client-sessions
@@ -243,11 +228,15 @@ var serve = {                                                // depends on cooki
             router.get('/:machine/:card', routes.auth);      // authentication route
         }
         app.use(router);                                     // get express to user the routes we set
-        sockets.listen(http);                                // listen and handle socket connections
-        http.listen(process.env.PORT);                       // listen on specified PORT enviornment variable
+        return http;
     }
 };
 
-mongo.init();                                                 // conect to our mongo server
+// High level start up sequence
+mongo.init(process.env.MONGODB_URI);                          // conect to our mongo server
+var http = serve.theSite();                                   // Set up site framework
+sockets.listen(http);                                         // listen and handle socket connections
+http.listen(process.env.PORT);                                // listen on specified PORT enviornment variable
 slack.init(process.env.BROADCAST_CHANNEL, 'Doorboto started');// fire up slack intergration, for x channel
-serve.theSite();                                              // Initiate site!
+
+// TODO close database and socket connections gracefully on sigint signal

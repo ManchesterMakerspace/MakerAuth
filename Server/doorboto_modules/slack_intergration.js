@@ -25,7 +25,7 @@ var slack = {
     },
     invite: function(email, newMember){
         try { // there are no errors only unexpected results
-            var channels = '&channels=C050A22AL,C050A22B2,G2ADCCBAP,C0GB99JUF,C29L2UMDF,C0MHNCXGV,C1M5NRPB5,C14TZJQSY,C1M6THS3E,C1QCBJ5D3';
+            var channels = '&channels=C050A22AL,C050A22B2,G2ADCCBAP,C0GB99JUF,C29L2UMDF,C0MHNCXGV,C1M5NRPB5,C14TZJQSY,C1M6THS3E,C1QCBJ5D3,G391Q3DGX';
             // Channels - general, random, who_at_the_space , 36_old_granite, talk_to_the_board, automotive, electronics, rapid p, wood, metal
             var emailReq = '&email=' + email;               // NOTE: has to be a valid email, no + this or that
             var inviteAddress = 'https://slack.com/api/users.admin.invite?token=' + slack.token + emailReq + channels;
